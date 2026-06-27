@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Book Tracker">
+<meta name="theme-color" content="#1C2340">
+<title>Tenure Book Tracker</title>
+
+<!-- Inline SVG favicon / apple touch icon via data URI -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231C2340'/><text y='.9em' font-size='72' x='12'>📚</text></svg>">
+
+<style>
+:root {
+  --navy:    #1C2340;
+  --navy2:   #232B4A;
+  --navy3:   #2E3A5C;
+  --text:    #1a1a1a;
+  --muted:   #666;
+  --rule:    #EAEAE4;
+  --bg:      #F7F7F3;
+  --white:   #ffffff;
+
+  --c-reframe:    #6B7FD7;
+  --c-proposal:   #D4845A;
+  --c-drafting:   #5A9E7A;
+  --c-intro:      #9B6BB5;
+  --c-fullms:     #C4923A;
+  --c-peerreview: #4A8FA8;
+  --c-production: #7A7A7A;
+
+  --safe-top:    env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: Georgia, 'Times New Roman', serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  padding-bottom: calc(32px + var(--safe-bottom));
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.header {
+  background: var(--navy);
+  padding: calc(16px + var(--safe-top)) 20px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-eyebrow {
+  font-family: system-ui, sans-serif;
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: #8DA4CC;
+  margin-bottom: 6px;
+}
+
+.header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: -.2px;
+  margin-bottom: 4px;
+}
+
+.header-sub {
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  color: #7A92BA;
+  margin-bottom: 14px;
+  line-height: 1.4;
+}
+
+.progress-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.progress-track {
+  flex: 1;
+  height: 6px;
+  background: var(--navy3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--c-reframe), var(--c-intro));
+  border-radius: 3px;
+  transition: width .5s cubic-bezier(.4,0,.2,1);
+}
+
+.progress-count {
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  color: #8DA4CC;
+  white-space: nowrap;
+  min-width: 62px;
+  text-align: right;
+}
+
+/* ── Note bar ────────────────────────────────────────────────── */
+.note-bar {
+  font-family: system-ui, sans-serif;
+  font-size: 11.5px;
+  color: var(--muted);
+  background: var(--white);
+  border-bottom: 1px solid var(--rule);
+  padding: 10px 20px;
+  line-height: 1.5;
+}
+.note-bar strong { color: #444; }
+
+/* ── Save toast ──────────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: calc(24px + var(--safe-bottom));
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  background: var(--navy);
+  color: #A8C4A0;
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  padding: 8px 18px;
+  border-radius: 20px;
+  opacity: 0;
+  transition: opacity .25s, transform .25s;
+  pointer-events: none;
+  z-index: 999;
+  white-space: nowrap;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── Phases ──────────────────────────────────────────────────── */
+.phases { padding: 0 12px; }
+
+.phase-card {
+  margin-top: 14px;
+  border-radius: 12px;
+  background: var(--white);
+  border: 1.5px solid var(--rule);
+  overflow: hidden;
+  transition: box-shadow .2s;
+}
+.phase-card.open {
+  box-shadow: 0 3px 14px rgba(0,0,0,.07);
+}
+
+.phase-btn {
+  width: 100%;
+  background: var(--white);
+  border: none;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: background .15s;
+  -webkit-appearance: none;
+}
+.phase-btn:active { background: #F0F0EA; }
+.phase-card.open .phase-btn { background: var(--phase-accent); }
+
+.phase-pip {
+  width: 5px;
+  height: 40px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.phase-info { flex: 1; min-width: 0; }
+
+.phase-eyebrow {
+  font-family: system-ui, sans-serif;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+.phase-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+
+.badge-done {
+  font-family: system-ui, sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  background: var(--c-reframe);
+  color: white;
+  border-radius: 8px;
+  padding: 2px 7px;
+}
+
+.phase-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.phase-pct {
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.phase-chevron {
+  font-size: 10px;
+  color: #bbb;
+  transition: transform .25s;
+}
+.phase-card.open .phase-chevron { transform: rotate(180deg); }
+
+/* ── Mini bar ────────────────────────────────────────────────── */
+.mini-bar {
+  height: 3px;
+  background: #F0F0EA;
+  overflow: hidden;
+}
+.mini-fill {
+  height: 100%;
+  transition: width .4s;
+}
+
+/* ── Tasks ───────────────────────────────────────────────────── */
+.tasks {
+  display: none;
+  padding: 4px 16px 16px;
+}
+.phase-card.open .tasks { display: block; }
+
+.task-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 13px 0;
+  border-top: 1px solid #F2F2EC;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.task-row:first-child { border-top: none; }
+.task-row.pre-done { cursor: default; }
+.task-row:not(.pre-done):active .task-label { opacity: .7; }
+
+.checkbox {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  border: 2px solid #C8C8C0;
+  background: var(--white);
+  flex-shrink: 0;
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s, border-color .15s;
+  position: relative;
+}
+.checkbox.checked {
+  background: var(--phase-color);
+  border-color: var(--phase-color);
+}
+.checkbox.pre { opacity: .65; }
+
+.check-svg { display: none; }
+.checkbox.checked .check-svg { display: block; }
+
+.task-body { flex: 1; min-width: 0; }
+
+.task-label {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+  margin-bottom: 4px;
+  transition: color .15s;
+}
+.task-label.done {
+  color: #bbb;
+  text-decoration: line-through;
+  font-weight: 400;
+}
+
+.task-detail {
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.55;
+  margin-bottom: 5px;
+  transition: opacity .15s;
+}
+.task-detail.done { opacity: .5; }
+
+/* Detail expand/collapse */
+.task-detail-short { display: block; }
+.task-detail-full  { display: none; }
+.task-row.expanded .task-detail-short { display: none; }
+.task-row.expanded .task-detail-full  { display: block; }
+
+.expand-hint {
+  font-family: system-ui, sans-serif;
+  font-size: 10.5px;
+  color: #aaa;
+  margin-bottom: 4px;
+}
+.task-row.expanded .expand-hint { display: none; }
+
+.task-due {
+  font-family: system-ui, sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.badge-status {
+  font-family: system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 1px 6px;
+  display: inline-block;
+  margin-left: 4px;
+}
+.badge-overdue  { background: #FDECEA; color: #C0392B; }
+.badge-soon     { background: #FEF3E2; color: #B7610A; }
+.badge-upcoming { background: #F0F0EA; color: #888; font-weight: 400; }
+.badge-alldone  { background: #EDF7F2; color: #3A8A5A; }
+
+/* ── Footer ──────────────────────────────────────────────────── */
+.footer {
+  margin: 20px 12px 0;
+  background: var(--navy);
+  border-radius: 12px;
+  padding: 18px 20px;
+  color: #8DA4CC;
+  font-family: system-ui, sans-serif;
+  font-size: 12.5px;
+  line-height: 1.65;
+}
+.footer-title {
+  color: var(--white);
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+.footer ul { padding-left: 16px; }
+.footer li { margin-bottom: 7px; }
+.footer li:last-child { margin-bottom: 0; }
+.footer strong { color: #C8D8F0; }
+
+/* ── Install banner ──────────────────────────────────────────── */
+.install-banner {
+  display: none;
+  margin: 14px 12px 0;
+  background: #EEF3FB;
+  border: 1.5px solid #C8D8F0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  color: #2E4A78;
+  line-height: 1.5;
+}
+.install-banner.visible { display: block; }
+.install-banner strong { color: #1C2340; }
+.install-close {
+  float: right;
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #8DA4CC;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 0 0 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-eyebrow">Tenure Book Plan · Fall 2026 – Year 4</div>
+  <h1>Book Tracker</h1>
+  <p class="header-sub">Reframing complete &middot; Proposal target: Nov 2026 &middot; Six chapters</p>
+  <div class="progress-row">
+    <div class="progress-track">
+      <div class="progress-fill" id="overall-fill" style="width:0%"></div>
+    </div>
+    <span class="progress-count" id="overall-count">— / — tasks</span>
+  </div>
+</div>
+
+<div class="note-bar">
+  <strong>Tap any task to check it off.</strong> Tap the detail text to expand. Progress saves to this browser automatically.
+</div>
+
+<div id="install-banner" class="install-banner">
+  <button class="install-close" onclick="dismissBanner()" aria-label="Dismiss">×</button>
+  <strong>Add to Home Screen for app-like access:</strong><br>
+  In Safari, tap the Share button (□↑) → <em>Add to Home Screen</em> → Add. Works offline, no browser chrome.
+</div>
+
+<div class="phases" id="phases"></div>
+
+<div class="footer">
+  <div class="footer-title">Keep in mind</div>
+  <ul>
+    <li><strong>You have more runway now.</strong> Finishing the proposal this fall gives ~6 extra months of buffer before tenure review — protect it.</li>
+    <li><strong>Start drafting before you hear back.</strong> Submit in November, open chapter 1 in December.</li>
+    <li><strong>Under contract ≠ published.</strong> Your tenure committee needs a press letter confirming contract and expected publication date.</li>
+    <li><strong>Peer review is out of your hands.</strong> The buffer in this timeline exists largely to absorb peer review delays.</li>
+    <li><strong>Write weekly, not in bursts.</strong> Consistent 2–3 hour sessions beat marathon breaks.</li>
+  </ul>
+</div>
+
+<div class="toast" id="toast">✓ Saved</div>
+
+<script>
+// ─── Dates ───────────────────────────────────────────────────────────────────
+function addM(date, n) {
+  const d = new Date(date); d.setMonth(d.getMonth() + n); return d;
+}
+function fmtShort(d) {
+  return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+}
+function fmtLong(d) {
+  return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
+const P = new Date('2026-11-01');
+
+// ─── Data ────────────────────────────────────────────────────────────────────
+const PHASES = [
+  {
+    id: 'reframe', label: 'Dissertation-to-Book Reframing',
+    yearLabel: 'Pre-start – Fall 2026',
+    color: '#6B7FD7', accent: '#EEF0FB', isComplete: true,
+    tasks: [
+      { id:'r1', label:'Read dissertation as a stranger', preCompleted:true,
+        due: new Date('2026-06-01'),
+        detail: 'You set aside the committee\'s voice and read the whole thing for a general academic reader, noting where it felt too narrow, too defensive, or too dissertation-like.' },
+      { id:'r2', label:'Identify the book\'s argument', preCompleted:true,
+        due: new Date('2026-07-01'),
+        detail: 'You have a working one-paragraph statement of what the book claims, for whom, and why it matters now.' },
+      { id:'r3', label:'Structural audit', preCompleted:true,
+        due: new Date('2026-08-01'),
+        detail: 'You\'ve mapped which dissertation chapters become book chapters, identified what new material is needed, and flagged the introduction and conclusion for full rewrites.' },
+      { id:'r4', label:'Research the target press', preCompleted:true,
+        due: new Date('2026-09-01'),
+        detail: 'You\'ve studied the press\'s recent list, read comparable titles in your area, and identified the acquisitions editor for your field.' },
+    ]
+  },
+  {
+    id: 'proposal', label: 'Book Proposal & Submission',
+    yearLabel: 'Fall 2026',
+    color: '#D4845A', accent: '#FBF2EE',
+    tasks: [
+      { id:'p1', label:'Finalize full book proposal',
+        due: new Date('2026-09-15'),
+        detail: 'A strong humanities proposal includes: (1) a 2–3 page overview/argument, (2) chapter summaries (~½ page each), (3) competing and complementary works, (4) audience and market statement, (5) your CV, and (6) a sample chapter. Most presses want 50–100 pages of sample material. You likely have a draft — now sharpen it.' },
+      { id:'p2', label:'Get feedback on proposal',
+        due: new Date('2026-10-10'),
+        detail: 'Share with your mentor, a senior colleague who has published with a university press, and ideally someone outside your subfield. Revise based on feedback before submitting. Allow 2–3 weeks for turnaround.' },
+      { id:'p3', label:'Contact acquisitions editor',
+        due: new Date('2026-10-20'),
+        detail: 'Send a brief query email (2–3 paragraphs) before submitting the full proposal. If there\'s a fall conference in your field, this is the ideal moment to connect in person — most acquisitions editors table at major disciplinary meetings.' },
+      { id:'p4', label:'Submit proposal to press',
+        due: new Date('2026-11-01'),
+        detail: 'Submit the full proposal with sample chapter. Follow the press\'s submission guidelines exactly. Keep a record of the date. Expect 2–6 months before hearing back — use this window to begin chapter drafting.' },
+    ]
+  },
+  {
+    id: 'drafting', label: 'Chapter Drafting',
+    yearLabel: 'Years 1–3',
+    color: '#5A9E7A', accent: '#EEF7F2',
+    tasks: [
+      { id:'d1', label:'Chapter 1 — draft & revise', due: addM(P,4),
+        detail: 'Begin drafting immediately after proposal submission — don\'t wait for a response. Strip the lit-review scaffolding, sharpen the argument, and write for a reader who hasn\'t read your other chapters. Budget 6–8 weeks for drafting plus 2–4 weeks for revision.' },
+      { id:'d2', label:'Chapter 2 — draft & revise', due: addM(P,7),
+        detail: 'If this is a new or heavily revised chapter, budget more time. Consider sharing a draft with a writing group or trusted colleague before moving on. By now you may have heard from the press — factor any early editorial feedback into your approach.' },
+      { id:'d3', label:'Chapter 3 — draft & revise', due: addM(P,10),
+        detail: 'Mid-manuscript check-in: reread chapters 1 and 2 alongside chapter 3 to ensure argument coherence across the book. Adjust framing and transitions. Revisit your proposal to confirm the book is delivering what you promised.' },
+      { id:'d4', label:'Chapter 4 — draft & revise', due: addM(P,13),
+        detail: 'Chapter 4 is often where books bog down. If it isn\'t working, consider whether it belongs earlier in the sequence, or whether its argument has been superseded by what you\'ve already written. Diagnose before pushing through.' },
+      { id:'d5', label:'Chapter 5 — draft & revise', due: addM(P,16),
+        detail: 'Begin thinking about the conclusion while drafting chapter 5. The conclusion should open outward — gesture toward what your argument makes possible that you haven\'t done yourself. Avoid merely summarizing.' },
+      { id:'d6', label:'Chapter 6 — draft & revise', due: addM(P,19),
+        detail: 'The final chapter often needs the most revision. After drafting, reread the introduction to ensure it accurately sets up what the book delivers — the two are usually out of sync at this stage.' },
+    ]
+  },
+  {
+    id: 'intro', label: 'Introduction & Conclusion',
+    yearLabel: 'Year 3',
+    color: '#9B6BB5', accent: '#F5F0FA',
+    tasks: [
+      { id:'i1', label:'Rewrite introduction', due: addM(P,21),
+        detail: 'The book introduction is not the dissertation introduction. It should situate the book in its field, state the argument boldly, briefly introduce each chapter, and compel a general academic reader to keep going. Budget 3–4 weeks for a full rewrite.' },
+      { id:'i2', label:'Draft or revise conclusion', due: addM(P,22),
+        detail: 'A book conclusion should synthesize without merely summarizing. Articulate what your argument opens up, its limitations, and what it implies for the field. 2–3 weeks.' },
+    ]
+  },
+  {
+    id: 'fullms', label: 'Full Manuscript Pass',
+    yearLabel: 'Year 3',
+    color: '#C4923A', accent: '#FBF5EC',
+    tasks: [
+      { id:'f1', label:'Read full manuscript front to back', due: addM(P,23),
+        detail: 'Print it out if possible. Read with fresh eyes for argument coherence, repetition, gaps, and transitions. Take notes but don\'t edit yet — get the full picture first.' },
+      { id:'f2', label:'Revise for cohesion', due: addM(P,25),
+        detail: 'Strengthen chapter-to-chapter transitions, cut material that no longer fits the book\'s argument, and ensure framing is consistent throughout. Resolve any gap between what the introduction promises and what the chapters deliver.' },
+      { id:'f3', label:'Share draft with trusted reader', due: addM(P,27),
+        detail: 'Ideally a senior scholar in your field who will read the whole thing. At least one person should read the full manuscript before submission. Allow 4–6 weeks for their turnaround.' },
+    ]
+  },
+  {
+    id: 'peerreview', label: 'Peer Review & Revisions',
+    yearLabel: 'Years 3–4',
+    color: '#4A8FA8', accent: '#EDF5F8',
+    tasks: [
+      { id:'pr1', label:'Submit full manuscript to press', due: addM(P,28),
+        detail: 'Submit to your contracted or interested press. Confirm whether the press needs a blind copy. Include a brief cover letter summarizing changes since the proposal.' },
+      { id:'pr2', label:'Peer review period (press-managed)', due: addM(P,34),
+        detail: 'Typical humanities peer review takes 3–6 months. Two external readers will evaluate your manuscript. Use this window for articles or conference papers — not anxious waiting.' },
+      { id:'pr3', label:'Respond to peer review & revise', due: addM(P,36),
+        detail: 'Write a detailed response memo addressing each reviewer\'s concerns point by point. Explain what you changed and, where you disagreed, articulate your reasoning respectfully. This memo matters — editors read it carefully.' },
+      { id:'pr4', label:'Submit revised manuscript', due: addM(P,37),
+        detail: 'Incorporate revisions and resubmit. The revised manuscript usually goes back to at least one original reviewer. If a second round is required, build in 2–3 more months — you\'re still within your tenure window.' },
+    ]
+  },
+  {
+    id: 'production', label: 'Copyediting & Production',
+    yearLabel: 'Year 4',
+    color: '#7A7A7A', accent: '#F5F5F5',
+    tasks: [
+      { id:'cp1', label:'Contract signed / MS accepted', due: addM(P,38),
+        detail: 'Once the press formally accepts the manuscript, you\'ll sign a contract. Review it carefully — pay attention to the timeline, rights clauses, image permissions, and index requirements.' },
+      { id:'cp2', label:'Copyediting phase', due: addM(P,39),
+        detail: 'The press\'s copyeditor returns the manuscript with queries and edits in a tracked-changes Word document. You\'ll have 2–4 weeks to review and respond. Do not ignore copyeditor queries — they catch real issues.' },
+      { id:'cp3', label:'Image permissions & front matter', due: addM(P,39),
+        detail: 'If your book includes images, secure permissions now (this takes longer than expected). Prepare acknowledgments, dedication, list of figures, and permissions language.' },
+      { id:'cp4', label:'Page proofs', due: addM(P,40),
+        detail: 'The press sends typeset page proofs (PDFs). Proofread carefully — last chance to catch errors. Do not make substantive changes; only correct errors. You\'ll typically have 1–2 weeks.' },
+      { id:'cp5', label:'Index', due: addM(P,41),
+        detail: 'Many humanities presses require an author-provided index. Consider hiring a professional indexer (~$4–8/page). Budget 1–2 weeks and confirm the press\'s requirements early.' },
+    ]
+  },
+];
+
+// ─── State ───────────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'tenure-pwa-v1';
+let state = { checked: {}, expanded: { proposal: true }, bannerDismissed: false };
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) state = { ...state, ...JSON.parse(raw) };
+  } catch(e) {}
+  // Pre-complete reframing
+  ['r1','r2','r3','r4'].forEach(id => { state.checked[id] = true; });
+}
+
+let saveTimer;
+function saveState() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+    showToast();
+  }, 300);
+}
+
+function showToast() {
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 1600);
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+const today = new Date();
+
+function statusBadge(task) {
+  if (task.preCompleted) return '<span class="badge-status badge-alldone">Done ✓</span>';
+  const days = Math.round((task.due - today) / 86400000);
+  if (days < 0)  return `<span class="badge-status badge-overdue">Overdue</span>`;
+  if (days < 60) return `<span class="badge-status badge-soon">Coming up</span>`;
+  return '';
+}
+
+function phaseProgress(phase) {
+  const total = phase.tasks.length;
+  const done  = phase.tasks.filter(t => state.checked[t.id]).length;
+  return { done, total, pct: total ? done/total : 0 };
+}
+
+function totalProgress() {
+  const all  = PHASES.flatMap(p => p.tasks);
+  const done = all.filter(t => state.checked[t.id]).length;
+  return { done, total: all.length, pct: all.length ? done/all.length : 0 };
+}
+
+function phaseDates(phase) {
+  const dues = phase.tasks.map(t => t.due);
+  const s = dues.reduce((a,b) => a<b?a:b);
+  const e = dues.reduce((a,b) => a>b?a:b);
+  return `${fmtShort(s)} – ${fmtShort(e)}`;
+}
+
+function truncate(str, max) {
+  if (str.length <= max) return str;
+  return str.slice(0, str.lastIndexOf(' ', max)) + '…';
+}
+
+// ─── Render ──────────────────────────────────────────────────────────────────
+function render() {
+  // Overall progress
+  const { done, total, pct } = totalProgress();
+  document.getElementById('overall-fill').style.width = (pct*100) + '%';
+  document.getElementById('overall-count').textContent = `${done} / ${total} tasks`;
+
+  // Install banner
+  const banner = document.getElementById('install-banner');
+  const isInstalled = window.navigator.standalone;
+  if (!isInstalled && !state.bannerDismissed) {
+    banner.classList.add('visible');
+  } else {
+    banner.classList.remove('visible');
+  }
+
+  // Phases
+  const container = document.getElementById('phases');
+  container.innerHTML = PHASES.map(phase => {
+    const { done: pd, total: pt, pct: pp } = phaseProgress(phase);
+    const isOpen = !!state.expanded[phase.id];
+
+    const tasks = phase.tasks.map(task => {
+      const isDone = !!state.checked[task.id];
+      const isExpanded = !!state.expanded['task_' + task.id];
+      const shortDetail = truncate(task.detail, 80);
+      const hasMore = task.detail.length > 80;
+
+      return `
+        <div class="task-row${task.preCompleted ? ' pre-done' : ''}${isExpanded ? ' expanded' : ''}"
+             id="task-${task.id}"
+             onclick="handleTaskClick('${task.id}', ${!!task.preCompleted}, event)">
+          <div class="checkbox${isDone ? ' checked' : ''}${task.preCompleted ? ' pre' : ''}"
+               style="--phase-color:${phase.color}">
+            <svg class="check-svg" width="12" height="9" viewBox="0 0 12 9" fill="none">
+              <path d="M1 4.5L4.5 8L11 1" stroke="white" stroke-width="2.2"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="task-body">
+            <div class="task-label${isDone ? ' done' : ''}">
+              ${task.label}${statusBadge(task)}
+            </div>
+            <div class="task-detail${isDone ? ' done' : ''}">
+              <span class="task-detail-short">${shortDetail}</span>
+              <span class="task-detail-full">${task.detail}</span>
+            </div>
+            ${hasMore ? '<div class="expand-hint">Tap label to expand ↓</div>' : ''}
+            <div class="task-due" style="color:${phase.color}">
+              Target: ${fmtLong(task.due)}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    return `
+      <div class="phase-card${isOpen ? ' open' : ''}" id="phase-${phase.id}">
+        <button class="phase-btn" style="--phase-accent:${phase.accent}"
+                onclick="togglePhase('${phase.id}')">
+          <div class="phase-pip" style="background:${phase.color}"></div>
+          <div class="phase-info">
+            <div class="phase-eyebrow" style="color:${phase.color}">
+              ${phase.yearLabel} &middot; ${phaseDates(phase)}
+            </div>
+            <div class="phase-name">
+              ${phase.label}
+              ${phase.isComplete ? '<span class="badge-done">Complete</span>' : ''}
+            </div>
+          </div>
+          <div class="phase-right">
+            <span class="phase-pct" style="color:${phase.color}">${Math.round(pp*100)}%</span>
+            <span class="phase-chevron">▼</span>
+          </div>
+        </button>
+        <div class="mini-bar">
+          <div class="mini-fill" style="width:${pp*100}%;background:${phase.color}"></div>
+        </div>
+        <div class="tasks">${tasks}</div>
+      </div>`;
+  }).join('');
+}
+
+// ─── Interactions ─────────────────────────────────────────────────────────────
+function togglePhase(id) {
+  state.expanded[id] = !state.expanded[id];
+  saveState();
+  render();
+}
+
+function handleTaskClick(id, isPreCompleted, event) {
+  // If clicking on the detail text area, toggle expand
+  if (event.target.closest('.task-detail, .expand-hint, .task-due')) {
+    state.expanded['task_' + id] = !state.expanded['task_' + id];
+    render(); // no save needed for expand state
+    return;
+  }
+  // Otherwise toggle checkbox (unless pre-completed)
+  if (isPreCompleted) return;
+  state.checked[id] = !state.checked[id];
+  saveState();
+  render();
+}
+
+function dismissBanner() {
+  state.bannerDismissed = true;
+  saveState();
+  render();
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+loadState();
+render();
+</script>
+</body>
+</html>
