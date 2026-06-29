@@ -320,7 +320,7 @@ body {
 .mini-bar { height: 2px; background: #F0F0EA; }
 .mini-fill { height: 100%; transition: width .4s; }
 
-.tasks { display: none; padding: 2px 16px 14px; }
+.tasks { display: none; padding: 2px 0 14px; }
 .phase-card.open .tasks { display: block; }
 
 /* ── Book task rows ──────────────────────────────────────────── */
@@ -328,7 +328,7 @@ body {
   display: flex;
   gap: 12px;
   align-items: flex-start;
-  padding: 13px 0;
+  padding: 13px 16px;
   border-top: 1px solid #F2F2EC;
   cursor: pointer;
 }
@@ -352,7 +352,7 @@ body {
 .check-svg { display: none; }
 .checkbox.checked .check-svg { display: block; }
 
-.task-body { flex: 1; min-width: 0; }
+.task-body { flex: 1; min-width: 0; padding-right: 28px; }
 .task-label {
   font-size: 14px;
   font-weight: 600;
@@ -444,6 +444,142 @@ body {
 }
 .note-saved-hint.show { display: block; }
 
+/* Task ⋯ button — absolute top-right of task-row, matching grant card position */
+.task-menu-btn {
+  position: absolute !important;
+  top: 10px;
+  right: 10px;
+  width: 28px !important;
+  height: 28px !important;
+  font-size: 17px !important;
+}
+.task-menu-dropdown {
+  position: absolute;
+  top: 36px;
+  right: 10px;
+  left: auto;
+}
+
+.add-task-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 16px 2px;
+  border-top: 1px solid #F2F2EC;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.add-task-row:active { opacity: .6; }
+.add-task-plus {
+  font-size: 18px;
+  font-weight: 300;
+  line-height: 1;
+  width: 21px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.add-task-label {
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+
+.edit-form {
+  display: none;
+  margin-top: 10px;
+  padding: 12px;
+  background: var(--bg);
+  border-radius: 8px;
+  border: 1px solid var(--rule);
+}
+.edit-form.open { display: block; }
+
+.edit-field {
+  margin-bottom: 10px;
+}
+.edit-field:last-child { margin-bottom: 0; }
+
+.edit-label {
+  font-family: system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+  display: block;
+}
+
+.edit-input, .edit-textarea {
+  width: 100%;
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--white);
+  border: 1.5px solid var(--rule);
+  border-radius: 7px;
+  padding: 8px 10px;
+  outline: none;
+  transition: border-color .15s;
+  -webkit-appearance: none;
+}
+.edit-input:focus, .edit-textarea:focus { border-color: var(--a1); }
+.edit-textarea {
+  min-height: 80px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  justify-content: flex-end;
+}
+
+.edit-save-btn {
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: white;
+  background: var(--a1);
+  border: none;
+  border-radius: 7px;
+  padding: 7px 16px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.edit-save-btn:active { opacity: .8; }
+
+.edit-cancel-btn {
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: 7px;
+  padding: 7px 14px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.edit-cancel-btn:active { opacity: .7; }
+
+.edit-reset {
+  font-family: system-ui, sans-serif;
+  font-size: 11px;
+  color: #B83030;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-right: auto;
+  align-self: center;
+}
+.edit-reset:active { opacity: .6; }
+
+
 /* ── Status badges ───────────────────────────────────────────── */
 .badge {
   font-family: system-ui, sans-serif;
@@ -509,10 +645,76 @@ body {
 .grant-card {
   margin-top: 10px;
   border-radius: 12px;
-  background: #FAFAF8;
+  background: var(--white);
   border: 1px solid var(--rule);
-  overflow: hidden;
+  overflow: visible; /* allow menu to overflow card */
+  position: relative;
 }
+
+/* Skipped state — greyed out until original deadline passes */
+.grant-card.skipped { opacity: .5; }
+
+/* Three-dot menu button */
+.grant-menu-btn {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  font-size: 17px;
+  color: #bbb;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  z-index: 10;
+  letter-spacing: 0;
+}
+.grant-menu-btn:active { background: var(--bg); }
+
+/* Dropdown menu */
+.grant-menu-dropdown {
+  position: absolute;
+  top: 36px;
+  right: 10px;
+  background: var(--white);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,.13);
+  z-index: 300;
+  min-width: 160px;
+  overflow: hidden;
+  display: none;
+}
+.grant-menu-dropdown.open { display: block; }
+
+.grant-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 16px;
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  background: none;
+  border: none;
+  border-top: 1px solid var(--rule);
+  cursor: pointer;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+.grant-menu-item:first-child { border-top: none; }
+.grant-menu-item:active { background: var(--bg); }
+.grant-menu-item.destructive { color: #B83030; }
+.grant-menu-item.restore     { color: var(--a1); }
+
 
 .grant-row {
   display: flex;
@@ -568,16 +770,6 @@ body {
 }
 .grant-row.expanded .grant-warning { display: block; }
 
-.grant-link {
-  font-family: system-ui, sans-serif;
-  font-size: 11.5px;
-  font-weight: 600;
-  text-decoration: none;
-  display: none;
-  margin-bottom: 8px;
-}
-.grant-row.expanded .grant-link { display: inline-block; }
-
 .grant-footer {
   display: flex;
   align-items: center;
@@ -606,6 +798,7 @@ body {
   flex-direction: column;
   align-items: flex-end;
   gap: 3px;
+  padding-top: 24px;
 }
 .grant-days {
   font-family: system-ui, sans-serif;
@@ -692,6 +885,17 @@ body {
     <button class="tab-btn" onclick="switchTab('book')">Book</button>
     <button class="tab-btn" onclick="switchTab('grants')">Grants</button>
   </div>
+</div>
+
+<!-- Sync banner — shown when there are unsynced local changes -->
+<div id="sync-banner" style="display:none;align-items:center;justify-content:space-between;
+     gap:10px;background:#FEF3E2;border-bottom:1px solid #F0D9B0;
+     padding:9px 20px;font-family:system-ui,sans-serif;font-size:12px;cursor:pointer;"
+     onclick="retrySync()">
+  <span class="sync-banner-text" style="color:#7A4510;font-weight:600;">
+    Unsynced changes — tap to retry
+  </span>
+  <span style="color:#A07830;font-weight:700;font-size:13px;">↑ Sync</span>
 </div>
 
 <!-- UPCOMING -->
@@ -903,7 +1107,12 @@ const GRANT_ERAS = [
     {id:'g-nhc',name:'National Humanities Center',color:'#5C6FBD',
      award:'Residential fellowship · full year · requires leave',
      deadline:'Early October (annual)',
-     nextDue:()=>new Date('2028-10-05'),
+     nextDue:()=>{
+       // Annual from Oct 2028 onward
+       const earliest = new Date('2028-10-05');
+       const candidate = nextAnnual(9, 5);
+       return candidate >= earliest ? candidate : earliest;
+     },
      recurring:'Annual · apply when Book 1 is in late drafting',bestPhase:'Years 3–4 / sabbatical',
      eligible:'Most competitive when Book 1 is in late drafting (2028–2030). Requires negotiating leave.',
      warning:'Do NOT take a leave-funded fellowship in the year before your semester sabbatical — this would trigger the ACLS lapse rule.',
@@ -941,7 +1150,11 @@ const GRANT_ERAS = [
     {id:'g-fulbright-fi',name:'Fulbright Finland Foundation',color:'#3D7E96',
      award:'Varies · Finnish-side scholar programs',
      deadline:'Varies — check Fulbright Finland directly',
-     nextDue:()=>new Date('2030-09-01'),
+     nextDue:()=>{
+       const earliest = new Date('2030-09-01');
+       const candidate = nextAnnual(8, 1);
+       return candidate >= earliest ? candidate : earliest;
+     },
      recurring:'Check directly each year',bestPhase:'Sabbatical / fieldwork',
      eligible:'Check directly with Fulbright Finland for current program availability.',
      detail:'Finnish-side scholar tracks separate from the U.S. Scholar program. Check the Fulbright Finland Foundation directly for current terms and deadlines — these operate differently from the U.S. side.',
@@ -952,7 +1165,11 @@ const GRANT_ERAS = [
     {id:'g-fchi',name:'Fox Center for Humanistic Inquiry (FCHI)',color:'#A07830',
      award:'Internal Emory residential fellowship',
      deadline:'Confirm with Emory annually',
-     nextDue:()=>new Date('2032-10-01'),
+     nextDue:()=>{
+       const earliest = new Date('2032-10-01');
+       const candidate = nextAnnual(9, 1);
+       return candidate >= earliest ? candidate : earliest;
+     },
      recurring:'Annual · tenured faculty only',bestPhase:'Post-tenure',
      eligible:'TENURED FACULTY ONLY. Top internal priority once tenured.',
      warning:'Only open to tenured faculty — not available until after your tenure case (~2032).',
@@ -960,16 +1177,24 @@ const GRANT_ERAS = [
      url:'https://fche.emory.edu'},
     {id:'g-villa',name:'Villa Albertine / Institut français',color:'#5C6FBD',
      award:'French-culture residency and support',
-     deadline:'Varies',
-     nextDue:()=>new Date('2032-01-01'),
+     deadline:'Varies — check annually',
+     nextDue:()=>{
+       const earliest = new Date('2032-01-15');
+       const candidate = nextAnnual(0, 15);
+       return candidate >= earliest ? candidate : earliest;
+     },
      recurring:'Varies',bestPhase:'Post-tenure / flexible',
      eligible:'Competitive profile is significantly stronger with Book 1 published.',
      detail:'French-culture residency and institutional support. Competitive profile strengthens substantially once Book 1 is published. Timing post-tenure is ideal.',
      url:'https://villa-albertine.org'},
     {id:'g-bogliasco',name:'Bogliasco / Bellagio',color:'#B87050',
      award:'Prestigious humanities residency',
-     deadline:'Varies',
-     nextDue:()=>new Date('2032-06-01'),
+     deadline:'Varies — check annually',
+     nextDue:()=>{
+       const earliest = new Date('2032-06-01');
+       const candidate = nextAnnual(5, 1);
+       return candidate >= earliest ? candidate : earliest;
+     },
      recurring:'Varies',bestPhase:'Post-tenure',
      eligible:'Strongest post-tenure with Book 1 published.',
      detail:'Highly competitive humanities residencies. Both are significantly more competitive with a published monograph. Best positioned post-tenure.',
@@ -1014,52 +1239,256 @@ const ANNUAL_GRANTS = [
    detail:'€2k–€10k for short Finland research stays (1-week minimum). From October 2026, the Finnish Cultural Foundation consolidates to a single Oct 15–30 round. Framed for artists/critics — confirm fit before applying.',
    url:'https://skr.fi/en/grants/'},
 ];
-const STORAGE_KEY = 'tenure-pwa-v3';
+// ─── GitHub backend config ────────────────────────────────────────────────────
+// Paste your personal access token below (repo scope, never expires).
+// Your data is saved to a private repo as a single JSON file.
+const GH_TOKEN  = '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';
+const GH_OWNER  = 'cobbnathan';
+const GH_REPO   = 'tenure-tracker-data';
+const GH_FILE   = 'state.json';
+const GH_API    = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
+
+
+async function ghLoad() {
+  if (!GH_TOKEN || GH_TOKEN === 'PASTE_YOUR_TOKEN_HERE') return null;
+  try {
+    const res = await fetch(GH_API, {
+      headers: { Authorization: `token ${GH_TOKEN}`, Accept: 'application/vnd.github.v3+json' }
+    });
+    if (res.status === 404) return null; // file doesn't exist yet
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    ghSha = data.sha;
+    return JSON.parse(atob(data.content.replace(/\n/g, '')));
+  } catch(e) {
+    console.warn('GitHub load failed, falling back to localStorage:', e);
+    return null;
+  }
+}
+
+async function ghSave(stateObj) {
+  if (!GH_TOKEN || GH_TOKEN === 'PASTE_YOUR_TOKEN_HERE') return false;
+  try {
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(stateObj, null, 2))));
+    const body = { message: 'Update tracker state', content, ...(ghSha ? {sha: ghSha} : {}) };
+    const res = await fetch(GH_API, {
+      method: 'PUT',
+      headers: {
+        Authorization: `token ${GH_TOKEN}`,
+        Accept: 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    ghSha = data.content.sha;
+    return true;
+  } catch(e) {
+    console.warn('GitHub save failed:', e);
+    return false;
+  }
+}
+
+const STORAGE_KEY  = 'tenure-pwa-v4';
+const PENDING_KEY  = 'tenure-pwa-pending'; // {ts: isoString, state: obj} when unsynced
+
+let ghSha = null;
+
+async function ghLoad() {
+  if (!GH_TOKEN || GH_TOKEN === 'PASTE_YOUR_TOKEN_HERE') return null;
+  try {
+    const res = await fetch(GH_API, {
+      headers: { Authorization: `token ${GH_TOKEN}`, Accept: 'application/vnd.github.v3+json' }
+    });
+    if (res.status === 404) return null;
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    ghSha = data.sha;
+    return JSON.parse(atob(data.content.replace(/\n/g, '')));
+  } catch(e) {
+    console.warn('GitHub load failed:', e);
+    return null;
+  }
+}
+
+async function ghSave(stateObj, markPendingOnFail) {
+  if (!GH_TOKEN || GH_TOKEN === 'PASTE_YOUR_TOKEN_HERE') return false;
+  try {
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(stateObj, null, 2))));
+    const body = { message: 'Update tracker state', content, ...(ghSha ? {sha: ghSha} : {}) };
+    const res = await fetch(GH_API, {
+      method: 'PUT',
+      headers: {
+        Authorization: `token ${GH_TOKEN}`,
+        Accept: 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+    ghSha = data.content.sha;
+    // Success — clear any pending sync flag
+    try { localStorage.removeItem(PENDING_KEY); } catch(e) {}
+    updateSyncBanner(false);
+    return true;
+  } catch(e) {
+    console.warn('GitHub save failed:', e);
+    // Mark as pending so we can sync when connectivity returns
+    if (markPendingOnFail) {
+      try {
+        localStorage.setItem(PENDING_KEY, JSON.stringify({
+          ts: new Date().toISOString(),
+          state: stateObj
+        }));
+      } catch(e2) {}
+      updateSyncBanner(true);
+    }
+    return false;
+  }
+}
+
 let state = {
   checked: {},
   bookExpanded: {proposal:true},
   grantExpanded: {},
   eraCollapsed: {},
   taskExpanded: {},
-  noteOpen: {},   // id -> bool, whether note area is expanded
-  notes: {},      // id -> string, note content
+  noteOpen: {},
+  notes: {},
+  skipped: {},
+  edits: {},
+  editOpen: {},
+  customTasks: {},
+  addingTask: {},
   activeTab: 'upcoming'
 };
 
-function loadState() {
+function sanitizeState() {
+  if (!state.checked      || typeof state.checked      !== 'object') state.checked      = {};
+  if (!state.bookExpanded || typeof state.bookExpanded !== 'object') state.bookExpanded  = {proposal:true};
+  if (!state.grantExpanded|| typeof state.grantExpanded!== 'object') state.grantExpanded = {};
+  if (!state.eraCollapsed || typeof state.eraCollapsed !== 'object') state.eraCollapsed  = {};
+  if (!state.taskExpanded || typeof state.taskExpanded !== 'object') state.taskExpanded   = {};
+  if (!state.noteOpen     || typeof state.noteOpen     !== 'object') state.noteOpen      = {};
+  if (!state.notes        || typeof state.notes        !== 'object') state.notes         = {};
+  if (!state.skipped      || typeof state.skipped      !== 'object') state.skipped       = {};
+  if (!state.edits        || typeof state.edits        !== 'object') state.edits         = {};
+  if (!state.editOpen     || typeof state.editOpen     !== 'object') state.editOpen      = {};
+  if (!state.customTasks  || typeof state.customTasks  !== 'object') state.customTasks   = {};
+  if (!state.addingTask   || typeof state.addingTask   !== 'object') state.addingTask    = {};
+}
+
+async function loadState() {
+  let ghState  = await ghLoad();
+  let lsState  = null;
+  let pending  = null;
+
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) state = {...state, ...JSON.parse(raw)};
+    if (raw) lsState = JSON.parse(raw);
   } catch(e) {}
+
+  try {
+    const raw = localStorage.getItem(PENDING_KEY);
+    if (raw) pending = JSON.parse(raw);
+  } catch(e) {}
+
+  if (ghState && pending) {
+    // GitHub loaded fine AND there's a pending local save.
+    // If the pending save is newer, push it up now and use it.
+    const ghTs  = ghState._savedAt ? new Date(ghState._savedAt) : new Date(0);
+    const penTs = new Date(pending.ts);
+    if (penTs > ghTs) {
+      console.log('Pending local changes are newer than GitHub — syncing now');
+      state = {...state, ...pending.state};
+      sanitizeState();
+      const ok = await ghSave(state, false);
+      if (ok) {
+        try { localStorage.removeItem(PENDING_KEY); } catch(e) {}
+        updateSyncBanner(false);
+      } else {
+        updateSyncBanner(true);
+      }
+    } else {
+      // GitHub is newer — discard stale pending
+      try { localStorage.removeItem(PENDING_KEY); } catch(e) {}
+      state = {...state, ...ghState};
+      sanitizeState();
+      updateSyncBanner(false);
+    }
+  } else if (ghState) {
+    state = {...state, ...ghState};
+    sanitizeState();
+    updateSyncBanner(false);
+  } else if (pending) {
+    // GitHub unavailable, use pending local state
+    state = {...state, ...pending.state};
+    sanitizeState();
+    updateSyncBanner(true);
+  } else if (lsState) {
+    // No GitHub, no pending — use plain localStorage
+    state = {...state, ...lsState};
+    sanitizeState();
+    updateSyncBanner(false);
+  }
+
   ['r1','r2','r3','r4'].forEach(id => { state.checked[id] = true; });
-  // Default: collapse eras that aren't yet active, unless user has set a preference
   const eraIdx = currentGrantEraIndex();
   GRANT_ERAS.forEach((era, i) => {
-    if (!(era.id in state.eraCollapsed)) {
-      state.eraCollapsed[era.id] = (i > eraIdx);
-    }
+    if (!(era.id in state.eraCollapsed)) state.eraCollapsed[era.id] = (i > eraIdx);
   });
 }
 
-// saveState: saves and shows the toast (for checkbox/note changes)
-// saveUi: saves silently (for expand/collapse state)
+// saveState: GitHub + localStorage + toast (for real data changes)
+// saveUi:   localStorage only, silent (for expand/collapse UI state)
 let saveTimer;
 function saveState() {
-  clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
-    showToast();
-  }, 300);
-}
-function saveUi() {
+  // Stamp the state with a save time for conflict resolution
+  state._savedAt = new Date().toISOString();
+  // Write to localStorage immediately as fallback
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    const ok = await ghSave(state, true); // markPendingOnFail = true
+    showToast(ok ? '✓ Saved to GitHub' : '✓ Saved locally — will sync when online');
+  }, 800);
 }
 
-function showToast() {
+function saveUi() {
+  state._savedAt = new Date().toISOString();
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => ghSave(state, true), 1200);
+}
+
+function updateSyncBanner(show) {
+  const banner = document.getElementById('sync-banner');
+  if (banner) banner.style.display = show ? 'flex' : 'none';
+}
+
+async function retrySync() {
+  const banner = document.getElementById('sync-banner');
+  if (banner) {
+    banner.querySelector('.sync-banner-text').textContent = 'Syncing…';
+  }
+  const ok = await ghSave(state, true);
+  if (ok) {
+    showToast('✓ Synced to GitHub');
+  } else {
+    showToast('Still offline — changes saved locally');
+    if (banner) banner.querySelector('.sync-banner-text').textContent = 'Unsynced changes — tap to retry';
+  }
+}
+
+
+function showToast(msg) {
   const t = document.getElementById('toast');
+  t.textContent = msg || '✓ Saved';
   t.classList.add('show');
   clearTimeout(t._t);
-  t._t = setTimeout(() => t.classList.remove('show'), 1500);
+  t._t = setTimeout(() => t.classList.remove('show'), 2000);
 }
 
 // ─── Tab switching ────────────────────────────────────────────────────────────
@@ -1073,22 +1502,29 @@ function switchTab(tab) {
       b.classList.add('active');
   });
   // Don't save for tab switches (no toast needed)
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
-}
+  saveUi();}
 
 // ─── Progress ─────────────────────────────────────────────────────────────────
+function allPhaseTasks(phase) {
+  const custom = (state.customTasks[phase.id] || []);
+  return [...phase.tasks, ...custom];
+}
+
 function totalBookProgress() {
-  const all  = BOOK_PHASES.flatMap(p => p.tasks);
+  const all  = BOOK_PHASES.flatMap(p => allPhaseTasks(p));
   const done = all.filter(t => state.checked[t.id]).length;
   return {done, total:all.length, pct:all.length?done/all.length:0};
 }
 function phaseProgress(phase) {
-  const total = phase.tasks.length;
-  const done  = phase.tasks.filter(t => state.checked[t.id]).length;
+  const tasks = allPhaseTasks(phase);
+  const total = tasks.length;
+  const done  = tasks.filter(t => state.checked[t.id]).length;
   return {done, total, pct:total?done/total:0};
 }
 function phaseDates(phase) {
-  const dues = phase.tasks.map(t=>t.due);
+  const tasks = allPhaseTasks(phase);
+  if (!tasks.length) return '';
+  const dues = tasks.map(t => t.due instanceof Date ? t.due : new Date(t.due+'T12:00:00'));
   const s = dues.reduce((a,b)=>a<b?a:b);
   const e = dues.reduce((a,b)=>a>b?a:b);
   return `${fmtShort(s)} – ${fmtShort(e)}`;
@@ -1133,9 +1569,10 @@ function buildUpcoming() {
   // Grants: only from current era and earlier
   const yearOut = new Date(TODAY); yearOut.setFullYear(yearOut.getFullYear()+1);
   GRANT_ERAS.forEach((era, i) => {
-    if (i > eraIdx) return; // future era — skip
+    if (i > eraIdx) return;
     era.grants.forEach(grant => {
-      const due = grant.nextDue();
+      if (isSkipped(grant)) return;
+      const due = grantNextDue(grant);
       if (!due) return;
       const d = daysUntil(due);
       if (d < -7 || due > yearOut) return;
@@ -1153,7 +1590,8 @@ function buildUpcoming() {
 
   // Annual grants — always included regardless of era
   ANNUAL_GRANTS.forEach(grant => {
-    const due = grant.nextDue();
+    if (isSkipped(grant)) return;
+    const due = grantNextDue(grant);
     if (!due) return;
     const d = daysUntil(due);
     if (d < -7 || due > yearOut) return;
@@ -1255,12 +1693,14 @@ function handleUpcomingClick(el) {
 }
 
 // ─── Notes ───────────────────────────────────────────────────────────────────
-function noteHtml(id, color) {
+function noteHtml(id, color, isExpanded) {
   const note    = state.notes[id] || '';
   const isOpen  = !!state.noteOpen[id];
   const hasNote = note.trim().length > 0;
+  // Always show if there's a note; only show toggle when card is expanded
+  const visible = isExpanded || hasNote;
   return `
-    <div class="note-section" style="display:block;">
+    <div class="note-section" style="${visible?'display:block;':''}">
       <button class="note-toggle${hasNote?' note-has-content':''}"
               onclick="toggleNote('${id}', event)"
               style="${hasNote?'color:'+color:''}">
@@ -1344,6 +1784,206 @@ function onNoteBlur(id) {
   }
 }
 
+// ─── Edit helpers ─────────────────────────────────────────────────────────────
+// Get the effective value for a field — custom edit overrides default
+function eff(id, field, defaultVal) {
+  return (state.edits[id] && state.edits[id][field] !== undefined)
+    ? state.edits[id][field] : defaultVal;
+}
+
+function openEdit(id, event) {
+  event.stopPropagation();
+  closeAllMenus();
+  state.editOpen[id] = true;
+  saveUi(); render();
+  setTimeout(() => {
+    const el = document.getElementById('edit-form-'+id);
+    if (el) el.scrollIntoView({behavior:'smooth', block:'nearest'});
+    const first = el && el.querySelector('.edit-input, .edit-textarea');
+    if (first) first.focus();
+  }, 80);
+}
+
+function cancelEdit(id, event) {
+  event.stopPropagation();
+  state.editOpen[id] = false;
+  saveUi(); render();
+}
+
+function saveTaskEdit(id, event) {
+  event.stopPropagation();
+  const label  = document.getElementById('edit-label-'+id)?.value.trim();
+  const detail = document.getElementById('edit-detail-'+id)?.value.trim();
+  const due    = document.getElementById('edit-due-'+id)?.value;
+  if (!state.edits[id]) state.edits[id] = {};
+  if (label)  state.edits[id].label  = label;
+  if (detail) state.edits[id].detail = detail;
+  if (due)    state.edits[id].due    = due;
+  state.editOpen[id] = false;
+  saveState(); render();
+}
+
+function saveGrantEdit(id, event) {
+  event.stopPropagation();
+  const name     = document.getElementById('edit-name-'+id)?.value.trim();
+  const detail   = document.getElementById('edit-detail-'+id)?.value.trim();
+  const url      = document.getElementById('edit-url-'+id)?.value.trim();
+  const deadline = document.getElementById('edit-deadline-'+id)?.value.trim();
+  if (!state.edits[id]) state.edits[id] = {};
+  if (name)     state.edits[id].name     = name;
+  if (detail)   state.edits[id].detail   = detail;
+  if (deadline) state.edits[id].deadline = deadline;
+  // Store url always — empty string means "remove the link"
+  state.edits[id].url = url;
+  state.editOpen[id] = false;
+  saveState(); render();
+}
+
+function resetEdit(id, event) {
+  event.stopPropagation();
+  delete state.edits[id];
+  state.editOpen[id] = false;
+  saveState(); render();
+}
+
+function closeAllMenus() {
+  document.querySelectorAll('.grant-menu-dropdown.open, .task-menu-dropdown.open')
+    .forEach(m => m.classList.remove('open'));
+}
+
+function taskEditHtml(task) {
+  const isOpen = !!state.editOpen[task.id];
+  if (!isOpen) return '';
+  const dueSrc = task.due instanceof Date ? task.due.toISOString().slice(0,10) : task.due;
+  const curLabel  = eff(task.id, 'label',  task.label);
+  const curDetail = eff(task.id, 'detail', task.detail);
+  const curDue    = eff(task.id, 'due', dueSrc);
+  const hasEdits  = !!(state.edits[task.id] && Object.keys(state.edits[task.id]).length);
+  return `<div class="edit-form open" id="edit-form-${task.id}" onclick="event.stopPropagation()">
+    <div class="edit-field">
+      <label class="edit-label">Task label</label>
+      <input class="edit-input" id="edit-label-${task.id}" type="text" value="${escHtml(curLabel)}">
+    </div>
+    <div class="edit-field">
+      <label class="edit-label">Detail text</label>
+      <textarea class="edit-textarea" id="edit-detail-${task.id}">${escHtml(curDetail)}</textarea>
+    </div>
+    <div class="edit-field">
+      <label class="edit-label">Target date</label>
+      <input class="edit-input" id="edit-due-${task.id}" type="date" value="${curDue.slice(0,10)}">
+    </div>
+    <div class="edit-actions">
+      ${hasEdits?`<button class="edit-reset" onclick="resetEdit('${task.id}',event)">Reset to default</button>`:''}
+      <button class="edit-cancel-btn" onclick="cancelEdit('${task.id}',event)">Cancel</button>
+      <button class="edit-save-btn" onclick="saveTaskEdit('${task.id}',event)">Save</button>
+    </div>
+  </div>`;
+}
+
+function grantEditHtml(grant) {
+  const isOpen = !!state.editOpen[grant.id];
+  if (!isOpen) return '';
+  const curName     = eff(grant.id, 'name',     grant.name);
+  const curDetail   = eff(grant.id, 'detail',   grant.detail);
+  const curUrl      = eff(grant.id, 'url',      grant.url || '');
+  const curDeadline = eff(grant.id, 'deadline', grant.deadline);
+  const hasEdits    = !!(state.edits[grant.id] && Object.keys(state.edits[grant.id]).length);
+  return `<div class="edit-form open" id="edit-form-${grant.id}" onclick="event.stopPropagation()">
+    <div class="edit-field">
+      <label class="edit-label">Grant name</label>
+      <input class="edit-input" id="edit-name-${grant.id}" type="text" value="${escHtml(curName)}">
+    </div>
+    <div class="edit-field">
+      <label class="edit-label">Detail text</label>
+      <textarea class="edit-textarea" id="edit-detail-${grant.id}">${escHtml(curDetail)}</textarea>
+    </div>
+    <div class="edit-field">
+      <label class="edit-label">Deadline description</label>
+      <input class="edit-input" id="edit-deadline-${grant.id}" type="text" value="${escHtml(curDeadline)}">
+    </div>
+    <div class="edit-field">
+      <label class="edit-label">URL</label>
+      <input class="edit-input" id="edit-url-${grant.id}" type="url" value="${escHtml(curUrl)}" placeholder="https://…">
+    </div>
+    <div class="edit-actions">
+      ${hasEdits?`<button class="edit-reset" onclick="resetEdit('${grant.id}',event)">Reset to default</button>`:''}
+      <button class="edit-cancel-btn" onclick="cancelEdit('${grant.id}',event)">Cancel</button>
+      <button class="edit-save-btn" onclick="saveGrantEdit('${grant.id}',event)">Save</button>
+    </div>
+  </div>`;
+}
+
+// ─── Custom task helpers ──────────────────────────────────────────────────────
+function addTaskRowHtml(phase) {
+  const isAdding = !!state.addingTask[phase.id];
+  const today = new Date().toISOString().slice(0,10);
+  if (isAdding) {
+    return `<div style="padding:12px 16px 4px;border-top:1px solid #F2F2EC;" onclick="event.stopPropagation()">
+      <div class="edit-form open" id="add-task-form-${phase.id}">
+        <div class="edit-field">
+          <label class="edit-label">Task label</label>
+          <input class="edit-input" id="new-task-label-${phase.id}" type="text" placeholder="e.g. Submit conference abstract">
+        </div>
+        <div class="edit-field">
+          <label class="edit-label">Detail (optional)</label>
+          <textarea class="edit-textarea" id="new-task-detail-${phase.id}" placeholder="Notes on this task…"></textarea>
+        </div>
+        <div class="edit-field">
+          <label class="edit-label">Target date</label>
+          <input class="edit-input" id="new-task-due-${phase.id}" type="date" value="${today}">
+        </div>
+        <div class="edit-actions">
+          <button class="edit-cancel-btn" onclick="cancelAddTask('${phase.id}',event)">Cancel</button>
+          <button class="edit-save-btn" onclick="saveNewTask('${phase.id}',event)">Add task</button>
+        </div>
+      </div>
+    </div>`;
+  }
+  return `<div class="add-task-row" onclick="openAddTask('${phase.id}',event)">
+    <span class="add-task-plus" style="color:${phase.color}">+</span>
+    <span class="add-task-label">Add task</span>
+  </div>`;
+}
+
+function openAddTask(phaseId, event) {
+  event.stopPropagation();
+  state.addingTask[phaseId] = true;
+  saveUi(); render();
+  setTimeout(() => {
+    const el = document.getElementById('new-task-label-'+phaseId);
+    if (el) el.focus();
+  }, 80);
+}
+
+function cancelAddTask(phaseId, event) {
+  event.stopPropagation();
+  state.addingTask[phaseId] = false;
+  saveUi(); render();
+}
+
+function saveNewTask(phaseId, event) {
+  event.stopPropagation();
+  const label  = document.getElementById('new-task-label-'+phaseId)?.value.trim();
+  const detail = document.getElementById('new-task-detail-'+phaseId)?.value.trim();
+  const due    = document.getElementById('new-task-due-'+phaseId)?.value;
+  if (!label) return;
+  if (!state.customTasks[phaseId]) state.customTasks[phaseId] = [];
+  const id = 'custom-' + Date.now();
+  state.customTasks[phaseId].push({ id, label, detail: detail || '', due: due || new Date().toISOString().slice(0,10) });
+  state.addingTask[phaseId] = false;
+  saveState(); render();
+}
+
+function deleteTask(phaseId, taskId, event) {
+  event.stopPropagation();
+  closeAllMenus();
+  state.customTasks[phaseId] = (state.customTasks[phaseId] || []).filter(t => t.id !== taskId);
+  delete state.checked[taskId];
+  delete state.notes[taskId];
+  delete state.edits[taskId];
+  saveState(); render();
+}
+
 // ─── Book render ──────────────────────────────────────────────────────────────
 function renderBook() {
   const container = document.getElementById('book-phases');
@@ -1351,24 +1991,46 @@ function renderBook() {
     const {pct} = phaseProgress(phase);
     const isOpen = !!state.bookExpanded[phase.id];
 
-    const tasks = phase.tasks.map(task => {
+    const customTasks = (state.customTasks[phase.id] || []).map(ct => ({...ct, isCustom:true, due: new Date(ct.due+'T12:00:00')}));
+    const allTasks = [...phase.tasks, ...customTasks];
+
+    const tasks = allTasks.map(task => {
       const isDone = !!state.checked[task.id];
       const isExp  = !!state.taskExpanded[task.id];
-      const short  = truncate(task.detail, 80);
-      const hasMore = task.detail.length > 80;
+
+      // Effective values (custom edits override defaults)
+      const effLabel  = eff(task.id, 'label',  task.label);
+      const effDetail = eff(task.id, 'detail', task.detail);
+      const effDueStr = eff(task.id, 'due',    task.due.toISOString().slice(0,10));
+      const effDue    = new Date(effDueStr + 'T12:00:00');
+      const isEdited  = !!(state.edits[task.id] && Object.keys(state.edits[task.id]).length);
+
+      const short   = truncate(effDetail, 80);
+      const hasMore = effDetail.length > 80;
 
       let badge = '';
       if (task.preCompleted) {
         badge = '<span class="badge badge-alldone">Done ✓</span>';
       } else {
-        const d = daysUntil(task.due);
-        if (d < 0)      badge = '<span class="badge badge-overdue">Overdue</span>';
-        else if (d<60)  badge = '<span class="badge badge-soon">Coming up</span>';
+        const d = daysUntil(effDue);
+        if (d < 0)     badge = '<span class="badge badge-overdue">Overdue</span>';
+        else if (d<60) badge = '<span class="badge badge-soon">Coming up</span>';
       }
+
+      const taskMenu = !task.preCompleted ? `
+        <button class="grant-menu-btn task-menu-btn"
+                onclick="toggleTaskMenu('${task.id}',event)"
+                aria-label="More options">⋯</button>
+        <div class="task-menu-dropdown grant-menu-dropdown" id="task-menu-${task.id}">
+          <button class="grant-menu-item" onclick="openEdit('${task.id}',event)">Edit</button>
+          ${task.isCustom ? `<button class="grant-menu-item destructive" onclick="deleteTask('${phase.id}','${task.id}',event)">Delete</button>` : ''}
+        </div>` : '';
 
       return `<div class="task-row${task.preCompleted?' pre-done':''}${isExp?' expanded':''}"
                    id="task-${task.id}"
+                   style="position:relative;"
                    onclick="handleBookTask('${task.id}',${!!task.preCompleted},event)">
+        ${taskMenu}
         <div class="checkbox${isDone?' checked':''}${task.preCompleted?' pre':''}"
              style="--phase-color:${phase.color}">
           <svg class="check-svg" width="11" height="9" viewBox="0 0 11 9" fill="none">
@@ -1377,14 +2039,20 @@ function renderBook() {
           </svg>
         </div>
         <div class="task-body">
-          <div class="task-label${isDone?' done':''}">${task.label}${badge}</div>
+          <div class="task-label${isDone?' done':''}">
+            ${effLabel}${badge}
+            ${isEdited?'<span style="font-family:system-ui,sans-serif;font-size:9px;color:var(--a5);margin-left:4px;">edited</span>':''}
+          </div>
           <div class="task-detail${isDone?' done':''}">
             <span class="task-detail-short">${short}</span>
-            <span class="task-detail-full">${task.detail}</span>
+            <span class="task-detail-full">${effDetail}</span>
           </div>
           ${hasMore?'<div class="expand-hint">Tap detail to expand ↓</div>':''}
-          <div class="task-due" style="color:${phase.color}">Target: ${fmtLong(task.due)}</div>
-          <div onclick="event.stopPropagation()">${noteHtml(task.id, phase.color)}</div>
+          <div class="task-due" style="color:${phase.color}">Target: ${fmtLong(effDue)}</div>
+          <div onclick="event.stopPropagation()">
+            ${noteHtml(task.id, phase.color, isExp)}
+            ${taskEditHtml(task)}
+          </div>
         </div>
       </div>`;
     }).join('');
@@ -1408,42 +2076,131 @@ function renderBook() {
       <div class="mini-bar">
         <div class="mini-fill" style="width:${pct*100}%;background:${phase.color}"></div>
       </div>
-      <div class="tasks">${tasks}</div>
+      <div class="tasks">
+        ${tasks}
+        ${isOpen ? addTaskRowHtml(phase) : ''}
+      </div>
     </div>`;
   }).join('');
 }
 
+// ─── Grant skip logic ─────────────────────────────────────────────────────────
+// state.skipped[id] stores the ISO date of the deadline that was dismissed.
+// The skip is "active" (grey, upcoming moved +1yr) until that original date passes.
+// Once the original deadline passes, the skip expires and the grant resets normally.
+
+function skippedOriginalDate(id) {
+  const stored = state.skipped[id];
+  return stored ? new Date(stored) : null;
+}
+
+function isSkipped(grant) {
+  const orig = skippedOriginalDate(grant.id);
+  return !!(orig && orig > TODAY);
+}
+
+// The displayed next due date for a grant — if skipped, push +1 year from original
+function grantNextDue(grant) {
+  const orig = skippedOriginalDate(grant.id);
+  if (orig && orig > TODAY) {
+    // Dismissed: show deadline one year after the skipped date
+    return addM(orig, 12);
+  }
+  return grant.nextDue();
+}
+
+function skipGrant(id, event) {
+  event.stopPropagation();
+  document.querySelectorAll('.grant-menu-dropdown.open').forEach(m => m.classList.remove('open'));
+  const allGrants = [...ANNUAL_GRANTS, ...GRANT_ERAS.flatMap(e => e.grants)];
+  const grant = allGrants.find(g => g.id === id);
+  if (!grant) return;
+  const due = grant.nextDue();
+  if (due) state.skipped[id] = due.toISOString();
+  saveUi();
+  render();
+}
+
+function unskipGrant(id, event) {
+  event.stopPropagation();
+  document.querySelectorAll('.grant-menu-dropdown.open').forEach(m => m.classList.remove('open'));
+  delete state.skipped[id];
+  saveUi();
+  render();
+}
+
 // ─── Grants render ────────────────────────────────────────────────────────────
 function grantCardHtml(grant) {
-  const isExp = !!state.grantExpanded[grant.id];
-  const due   = grant.nextDue();
-  const days  = due ? daysUntil(due) : null;
+  const isExp    = !!state.grantExpanded[grant.id];
+  const skipped  = isSkipped(grant);
+  const isEdited = !!(state.edits[grant.id] && Object.keys(state.edits[grant.id]).length);
+
+  // Effective values
+  const effName     = eff(grant.id, 'name',     grant.name);
+  const effDetail   = eff(grant.id, 'detail',   grant.detail);
+  const effUrl      = eff(grant.id, 'url',      grant.url);
+  const effDeadline = eff(grant.id, 'deadline', grant.deadline);
+
+  const due      = grantNextDue(grant);
+  const days     = due ? daysUntil(due) : null;
   const daysHtml = days !== null ? daysPill(days, grant.color) : '';
   const warningHtml = grant.warning
     ? `<div class="grant-warning">${grant.warning}</div>` : '';
-  const linkHtml = grant.url
-    ? `<a class="grant-link" href="${grant.url}" target="_blank" rel="noopener"
-          style="color:${grant.color}" onclick="event.stopPropagation()">Open website ↗</a>` : '';
-  return `<div class="grant-card" id="grant-${grant.id}">
-    <div class="grant-row${isExp?' expanded':''}" onclick="toggleGrant('${grant.id}')">
-      <div class="grant-dot" style="background:${grant.color}"></div>
-      <div class="grant-body">
-        <div class="grant-name">${grant.name}</div>
-        <div class="grant-award">${grant.award}</div>
-        <div class="grant-detail">${grant.detail}</div>
-        ${warningHtml}
-        ${linkHtml}
-        <div class="grant-footer">
-          <div class="grant-deadline" style="color:${grant.color}">${grant.deadline}</div>
-          <div class="grant-phase-tag">${grant.bestPhase}</div>
+
+  const menuItems = `
+    <button class="grant-menu-item" onclick="openEdit('${grant.id}',event)">Edit</button>
+    ${skipped
+      ? `<button class="grant-menu-item restore" onclick="unskipGrant('${grant.id}',event)">Restore</button>`
+      : `<button class="grant-menu-item destructive" onclick="skipGrant('${grant.id}',event)">Dismiss</button>`
+    }`;
+
+  const skippedTag = skipped
+    ? `<span style="font-family:system-ui,sans-serif;font-size:10px;font-weight:600;
+                    color:var(--muted);background:var(--bg);border-radius:4px;
+                    padding:1px 6px;margin-left:6px;border:1px solid var(--rule);">dismissed</span>` : '';
+  const editedTag = isEdited
+    ? `<span style="font-family:system-ui,sans-serif;font-size:9px;color:var(--a5);margin-left:4px;">edited</span>` : '';
+
+  return `<div class="grant-card${skipped?' skipped':''}" id="grant-${grant.id}" style="overflow:visible;position:relative;">
+    <button class="grant-menu-btn"
+            onclick="toggleGrantMenu('${grant.id}',event)"
+            aria-label="More options">⋯</button>
+    <div style="border-radius:12px;border:1px solid var(--rule);background:var(--white);">
+      <div class="grant-row${isExp?' expanded':''}" onclick="toggleGrant('${grant.id}')">
+        <div class="grant-dot" style="background:${grant.color}"></div>
+        <div class="grant-body">
+          <div class="grant-name">${effName}${skippedTag}${editedTag}</div>
+          <div class="grant-award">${grant.award}</div>
+          <div class="grant-detail">${effDetail}</div>
+          ${warningHtml}
+          <div class="grant-footer">
+            <div class="grant-deadline" style="color:${grant.color}">${effDeadline}</div>
+            <div class="grant-phase-tag">${grant.bestPhase}</div>
+          </div>
         </div>
-        <div onclick="event.stopPropagation()">${noteHtml(grant.id, grant.color)}</div>
+        <div class="grant-right">
+          ${due?`<div class="grant-days">${daysHtml}</div>
+                 <div class="grant-date">${fmtMD(due)}</div>`:''}
+          <div class="grant-chevron" style="margin-top:4px;">▼</div>
+        </div>
       </div>
-      <div class="grant-right">
-        ${due?`<div class="grant-days">${daysHtml}</div>
-               <div class="grant-date">${fmtMD(due)}</div>`:''}
-        <div class="grant-chevron">▼</div>
-      </div>
+      ${isExp ? `<div style="padding:4px 16px 14px;border-top:1px solid var(--rule);">
+          ${effUrl ? `<div style="padding:4px 0 6px;">
+            <a href="${effUrl}" target="_blank" rel="noopener"
+               style="font-family:system-ui,sans-serif;font-size:12px;font-weight:600;
+                      color:${grant.color};text-decoration:none;
+                      display:inline-block;padding:6px 12px;
+                      background:var(--bg);border-radius:6px;
+                      border:1px solid var(--rule);">
+              Open website ↗
+            </a>
+          </div>` : ''}
+          ${noteHtml(grant.id, grant.color, isExp)}
+          ${grantEditHtml(grant)}
+        </div>` : ''}
+    </div>
+    <div class="grant-menu-dropdown" id="menu-${grant.id}">
+      ${menuItems}
     </div>
   </div>`;
 }
@@ -1502,6 +2259,27 @@ function toggleEra(id) {
   saveUi(); render();
 }
 
+function toggleGrantMenu(id, event) {
+  event.stopPropagation();
+  const menu = document.getElementById('menu-'+id);
+  if (!menu) return;
+  const isOpen = menu.classList.contains('open');
+  closeAllMenus();
+  if (!isOpen) menu.classList.add('open');
+}
+
+function toggleTaskMenu(id, event) {
+  event.stopPropagation();
+  const menu = document.getElementById('task-menu-'+id);
+  if (!menu) return;
+  const isOpen = menu.classList.contains('open');
+  closeAllMenus();
+  if (!isOpen) menu.classList.add('open');
+}
+
+// Close any open menu when tapping elsewhere
+document.addEventListener('click', () => { closeAllMenus(); });
+
 function toggleGrant(id) {
   state.grantExpanded[id] = !state.grantExpanded[id];
   saveUi(); render();
@@ -1518,11 +2296,15 @@ function render() {
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
-loadState();
-if (state.activeTab && state.activeTab !== 'upcoming') {
-  switchTab(state.activeTab);
-}
-render();
+(async () => {
+  // Show a brief loading indicator while fetching from GitHub
+  document.getElementById('overall-label').textContent = '…';
+  await loadState();
+  if (state.activeTab && state.activeTab !== 'upcoming') {
+    switchTab(state.activeTab);
+  }
+  render();
+})();
 </script>
 </body>
 </html>
