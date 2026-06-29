@@ -1239,103 +1239,45 @@ const ANNUAL_GRANTS = [
    detail:'€2k–€10k for short Finland research stays (1-week minimum). From October 2026, the Finnish Cultural Foundation consolidates to a single Oct 15–30 round. Framed for artists/critics — confirm fit before applying.',
    url:'https://skr.fi/en/grants/'},
 ];
-// ─── GitHub backend config ────────────────────────────────────────────────────
-// Paste your personal access token below (repo scope, never expires).
-// Your data is saved to a private repo as a single JSON file.
-const GH_TOKEN  = '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';
-const GH_OWNER  = 'cobbnathan';
-const GH_REPO   = 'tenure-tracker-data';
-const GH_FILE   = 'state.json';
-const GH_API    = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
+// ─── Cloudflare Worker backend ────────────────────────────────────────────────
+// All GitHub API calls are proxied through the Worker — token never touches HTML.
+const WORKER_URL  = 'https://rough-wood-a2ca.cobbnathan94.workers.dev/';
+const STORAGE_KEY = 'tenure-pwa-v4';
+const PENDING_KEY = 'tenure-pwa-pending';
 
+let ghSha = null;
 
 async function ghLoad() {
-  if (!GH_TOKEN || GH_TOKEN === 'PASTE_YOUR_TOKEN_HERE') return null;
   try {
-    const res = await fetch(GH_API, {
-      headers: { Authorization: `token ${GH_TOKEN}`, Accept: 'application/vnd.github.v3+json' }
-    });
+    const res = await fetch(WORKER_URL, { method: 'GET' });
     if (res.status === 404) return null; // file doesn't exist yet
     if (!res.ok) throw new Error(res.status);
     const data = await res.json();
     ghSha = data.sha;
     return JSON.parse(atob(data.content.replace(/\n/g, '')));
   } catch(e) {
-    console.warn('GitHub load failed, falling back to localStorage:', e);
-    return null;
-  }
-}
-
-async function ghSave(stateObj) {
-  if (!GH_TOKEN || GH_TOKEN === 'PASTE_YOUR_TOKEN_HERE') return false;
-  try {
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(stateObj, null, 2))));
-    const body = { message: 'Update tracker state', content, ...(ghSha ? {sha: ghSha} : {}) };
-    const res = await fetch(GH_API, {
-      method: 'PUT',
-      headers: {
-        Authorization: `token ${GH_TOKEN}`,
-        Accept: 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(body)
-    });
-    if (!res.ok) throw new Error(res.status);
-    const data = await res.json();
-    ghSha = data.content.sha;
-    return true;
-  } catch(e) {
-    console.warn('GitHub save failed:', e);
-    return false;
-  }
-}
-
-const STORAGE_KEY  = 'tenure-pwa-v4';
-const PENDING_KEY  = 'tenure-pwa-pending'; // {ts: isoString, state: obj} when unsynced
-
-let ghSha = null;
-
-async function ghLoad() {
-  if (!GH_TOKEN || GH_TOKEN === 'PASTE_YOUR_TOKEN_HERE') return null;
-  try {
-    const res = await fetch(GH_API, {
-      headers: { Authorization: `token ${GH_TOKEN}`, Accept: 'application/vnd.github.v3+json' }
-    });
-    if (res.status === 404) return null;
-    if (!res.ok) throw new Error(res.status);
-    const data = await res.json();
-    ghSha = data.sha;
-    return JSON.parse(atob(data.content.replace(/\n/g, '')));
-  } catch(e) {
-    console.warn('GitHub load failed:', e);
+    console.warn('Worker load failed, falling back to localStorage:', e);
     return null;
   }
 }
 
 async function ghSave(stateObj, markPendingOnFail) {
-  if (!GH_TOKEN || GH_TOKEN === 'PASTE_YOUR_TOKEN_HERE') return false;
   try {
     const content = btoa(unescape(encodeURIComponent(JSON.stringify(stateObj, null, 2))));
     const body = { message: 'Update tracker state', content, ...(ghSha ? {sha: ghSha} : {}) };
-    const res = await fetch(GH_API, {
+    const res = await fetch(WORKER_URL, {
       method: 'PUT',
-      headers: {
-        Authorization: `token ${GH_TOKEN}`,
-        Accept: 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
     if (!res.ok) throw new Error(res.status);
     const data = await res.json();
     ghSha = data.content.sha;
-    // Success — clear any pending sync flag
     try { localStorage.removeItem(PENDING_KEY); } catch(e) {}
     updateSyncBanner(false);
     return true;
   } catch(e) {
-    console.warn('GitHub save failed:', e);
-    // Mark as pending so we can sync when connectivity returns
+    console.warn('Worker save failed:', e);
     if (markPendingOnFail) {
       try {
         localStorage.setItem(PENDING_KEY, JSON.stringify({
