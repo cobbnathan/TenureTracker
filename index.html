@@ -1934,7 +1934,12 @@ function renderBook() {
     const isOpen = !!state.bookExpanded[phase.id];
 
     const customTasks = (state.customTasks[phase.id] || []).map(ct => ({...ct, isCustom:true, due: new Date(ct.due+'T12:00:00')}));
-    const allTasks = [...phase.tasks, ...customTasks];
+    const allTasks = [...phase.tasks, ...customTasks]
+      .sort((a, b) => {
+        const da = a.due instanceof Date ? a.due : new Date(a.due+'T12:00:00');
+        const db = b.due instanceof Date ? b.due : new Date(b.due+'T12:00:00');
+        return da - db;
+      });
 
     const tasks = allTasks.map(task => {
       const isDone = !!state.checked[task.id];
