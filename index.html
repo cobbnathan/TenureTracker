@@ -1491,19 +1491,20 @@ function buildUpcoming() {
   const eraIdx = currentGrantEraIndex();
   let candidates = [];
 
-  // Book: soonest unchecked task
+  // Book: soonest unchecked task — includes custom tasks via allPhaseTasks()
   BOOK_PHASES.forEach(phase => {
-    phase.tasks.forEach(task => {
+    allPhaseTasks(phase).forEach(task => {
       if (state.checked[task.id]) return;
+      const due = task.due instanceof Date ? task.due : new Date(task.due+'T12:00:00');
       candidates.push({
-        label: task.label,
+        label: eff(task.id, 'label', task.label),
         meta: 'Book — ' + phase.label,
-        due: task.due,
+        due,
         color: phase.color,
         section: 'book',
         targetPhase: phase.id,
         targetTask: task.id,
-        days: daysUntil(task.due)
+        days: daysUntil(due)
       });
     });
   });
