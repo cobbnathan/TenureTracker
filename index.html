@@ -1247,6 +1247,18 @@ const PENDING_KEY = 'tenure-pwa-pending';
 
 let ghSha = null;
 
+// Base64 <-> UTF-8 string helpers (GitHub's content API is base64-of-UTF8-bytes)
+function utf8ToB64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  bytes.forEach(b => binary += String.fromCharCode(b));
+  return btoa(binary);
+}
+function b64ToUtf8(b64) {
+  const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
 async function ghLoad() {
   try {
     const res = await fetch(WORKER_URL, { method: 'GET' });
@@ -1254,7 +1266,7 @@ async function ghLoad() {
     if (!res.ok) throw new Error(res.status);
     const data = await res.json();
     ghSha = data.sha;
-    return JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g, '')))));
+    return JSON.parse(b64ToUtf8(data.content.replace(/\n/g, '')));
   } catch(e) {
     console.warn('Worker load failed, falling back to localStorage:', e);
     return null;
@@ -1263,7 +1275,7 @@ async function ghLoad() {
 
 async function ghSave(stateObj, markPendingOnFail) {
   try {
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(stateObj, null, 2))));
+    const content = utf8ToB64(JSON.stringify(stateObj, null, 2));
     const body = { message: 'Update tracker state', content, ...(ghSha ? {sha: ghSha} : {}) };
     const res = await fetch(WORKER_URL, {
       method: 'PUT',
@@ -1463,10 +1475,15 @@ function phaseProgress(phase) {
   const done  = tasks.filter(t => state.checked[t.id]).length;
   return {done, total, pct:total?done/total:0};
 }
+function effDueDate(task) {
+  const defaultStr = task.due instanceof Date ? task.due.toISOString().slice(0,10) : task.due;
+  return new Date(eff(task.id, 'due', defaultStr) + 'T12:00:00');
+}
+
 function phaseDates(phase) {
   const tasks = allPhaseTasks(phase);
   if (!tasks.length) return '';
-  const dues = tasks.map(t => t.due instanceof Date ? t.due : new Date(t.due+'T12:00:00'));
+  const dues = tasks.map(effDueDate);
   const s = dues.reduce((a,b)=>a<b?a:b);
   const e = dues.reduce((a,b)=>a>b?a:b);
   return `${fmtShort(s)} – ${fmtShort(e)}`;
@@ -1495,7 +1512,7 @@ function buildUpcoming() {
   BOOK_PHASES.forEach(phase => {
     allPhaseTasks(phase).forEach(task => {
       if (state.checked[task.id]) return;
-      const due = task.due instanceof Date ? task.due : new Date(task.due+'T12:00:00');
+      const due = effDueDate(task);
       candidates.push({
         label: eff(task.id, 'label', task.label),
         meta: 'Book — ' + phase.label,
@@ -1520,7 +1537,7 @@ function buildUpcoming() {
       const d = daysUntil(due);
       if (d < -7 || due > yearOut) return;
       candidates.push({
-        label: grant.name,
+        label: eff(grant.id, 'name', grant.name),
         meta: 'Grant · ' + era.label.split(' —')[0],
         due,
         color: grant.color,
@@ -1539,7 +1556,7 @@ function buildUpcoming() {
     const d = daysUntil(due);
     if (d < -7 || due > yearOut) return;
     candidates.push({
-      label: grant.name,
+      label: eff(grant.id, 'name', grant.name),
       meta: 'Grant · Annual',
       due,
       color: grant.color,
@@ -1587,7 +1604,7 @@ function buildUpcoming() {
          onclick="handleUpcomingClick(this)">
       <div class="upcoming-dot" style="background:${item.color}"></div>
       <div class="upcoming-body">
-        <div class="upcoming-label">${item.label}</div>
+        <div class="upcoming-label">${escHtml(item.label)}</div>
         <div class="upcoming-meta">${item.meta}</div>
       </div>
       <div class="upcoming-right">
@@ -1943,7 +1960,7 @@ function renderBook() {
 
     const customTasks = (state.customTasks[phase.id] || []).map(ct => ({...ct, isCustom:true, due: new Date(ct.due+'T12:00:00')}));
     const allTasks = [...phase.tasks, ...customTasks]
-      .map(task => ({...task, effDue: new Date(eff(task.id, 'due', task.due.toISOString().slice(0,10)) + 'T12:00:00')}))
+      .map(task => ({...task, effDue: effDueDate(task)}))
       .sort((a,b) => a.effDue - b.effDue);
 
     const tasks = allTasks.map(task => {
@@ -1993,12 +2010,12 @@ function renderBook() {
         </div>
         <div class="task-body">
           <div class="task-label${isDone?' done':''}">
-            ${effLabel}${badge}
+            ${escHtml(effLabel)}${badge}
             ${isEdited?'<span style="font-family:system-ui,sans-serif;font-size:9px;color:var(--a5);margin-left:4px;">edited</span>':''}
           </div>
           <div class="task-detail${isDone?' done':''}">
-            <span class="task-detail-short">${short}</span>
-            <span class="task-detail-full">${effDetail}</span>
+            <span class="task-detail-short">${escHtml(short)}</span>
+            <span class="task-detail-full">${escHtml(effDetail)}</span>
           </div>
           ${hasMore?'<div class="expand-hint">Tap detail to expand ↓</div>':''}
           <div class="task-due" style="color:${phase.color}">Target: ${fmtLong(effDue)}</div>
@@ -2131,12 +2148,12 @@ function grantCardHtml(grant) {
       <div class="grant-row${isExp?' expanded':''}" onclick="toggleGrant('${grant.id}')">
         <div class="grant-dot" style="background:${grant.color}"></div>
         <div class="grant-body">
-          <div class="grant-name">${effName}${skippedTag}${editedTag}</div>
+          <div class="grant-name">${escHtml(effName)}${skippedTag}${editedTag}</div>
           <div class="grant-award">${grant.award}</div>
-          <div class="grant-detail">${effDetail}</div>
+          <div class="grant-detail">${escHtml(effDetail)}</div>
           ${warningHtml}
           <div class="grant-footer">
-            <div class="grant-deadline" style="color:${grant.color}">${effDeadline}</div>
+            <div class="grant-deadline" style="color:${grant.color}">${escHtml(effDeadline)}</div>
             <div class="grant-phase-tag">${grant.bestPhase}</div>
           </div>
         </div>
@@ -2148,7 +2165,7 @@ function grantCardHtml(grant) {
       </div>
       ${isExp ? `<div style="padding:4px 16px 14px;border-top:1px solid var(--rule);">
           ${effUrl ? `<div style="padding:4px 0 6px;">
-            <a href="${effUrl}" target="_blank" rel="noopener"
+            <a href="${escHtml(effUrl)}" target="_blank" rel="noopener"
                style="font-family:system-ui,sans-serif;font-size:12px;font-weight:600;
                       color:${grant.color};text-decoration:none;
                       display:inline-block;padding:6px 12px;
@@ -2249,7 +2266,7 @@ function toggleGrant(id) {
 
 // ─── Master render ────────────────────────────────────────────────────────────
 function render() {
-  const {done, total, pct} = totalBookProgress();
+  const {pct} = totalBookProgress();
   document.getElementById('overall-fill').style.width = (pct*100)+'%';
   document.getElementById('overall-label').textContent = Math.round(pct*100)+'%';
   buildUpcoming();
