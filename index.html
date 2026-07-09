@@ -1491,19 +1491,20 @@ function buildUpcoming() {
   const eraIdx = currentGrantEraIndex();
   let candidates = [];
 
-  // Book: soonest unchecked task
+  // Book: soonest unchecked task — includes custom tasks via allPhaseTasks()
   BOOK_PHASES.forEach(phase => {
-    phase.tasks.forEach(task => {
+    allPhaseTasks(phase).forEach(task => {
       if (state.checked[task.id]) return;
+      const due = task.due instanceof Date ? task.due : new Date(task.due+'T12:00:00');
       candidates.push({
-        label: task.label,
+        label: eff(task.id, 'label', task.label),
         meta: 'Book — ' + phase.label,
-        due: task.due,
+        due,
         color: phase.color,
         section: 'book',
         targetPhase: phase.id,
         targetTask: task.id,
-        days: daysUntil(task.due)
+        days: daysUntil(due)
       });
     });
   });
@@ -1757,10 +1758,12 @@ function saveTaskEdit(id, event) {
   const label  = document.getElementById('edit-label-'+id)?.value.trim();
   const detail = document.getElementById('edit-detail-'+id)?.value.trim();
   const due    = document.getElementById('edit-due-'+id)?.value;
+  const url    = document.getElementById('edit-url-'+id)?.value.trim();
   if (!state.edits[id]) state.edits[id] = {};
   if (label)  state.edits[id].label  = label;
   if (detail) state.edits[id].detail = detail;
   if (due)    state.edits[id].due    = due;
+  state.edits[id].url = url; // empty string removes the link
   state.editOpen[id] = false;
   saveState(); render();
 }
@@ -1800,6 +1803,7 @@ function taskEditHtml(task) {
   const curLabel  = eff(task.id, 'label',  task.label);
   const curDetail = eff(task.id, 'detail', task.detail);
   const curDue    = eff(task.id, 'due', dueSrc);
+  const curUrl    = eff(task.id, 'url',    '');
   const hasEdits  = !!(state.edits[task.id] && Object.keys(state.edits[task.id]).length);
   return `<div class="edit-form open" id="edit-form-${task.id}" onclick="event.stopPropagation()">
     <div class="edit-field">
@@ -1813,6 +1817,10 @@ function taskEditHtml(task) {
     <div class="edit-field">
       <label class="edit-label">Target date</label>
       <input class="edit-input" id="edit-due-${task.id}" type="date" value="${curDue.slice(0,10)}">
+    </div>
+    <div class="edit-field">
+      <label class="edit-label">URL (optional)</label>
+      <input class="edit-input" id="edit-url-${task.id}" type="url" value="${escHtml(curUrl)}" placeholder="https://…">
     </div>
     <div class="edit-actions">
       ${hasEdits?`<button class="edit-reset" onclick="resetEdit('${task.id}',event)">Reset to default</button>`:''}
@@ -1948,6 +1956,8 @@ function renderBook() {
       const effDue    = task.effDue;
       const isEdited  = !!(state.edits[task.id] && Object.keys(state.edits[task.id]).length);
 
+      const effUrl    = eff(task.id, 'url', task.url || '');
+
       const short   = truncate(effDetail, 80);
       const hasMore = effDetail.length > 80;
 
@@ -1993,6 +2003,15 @@ function renderBook() {
           ${hasMore?'<div class="expand-hint">Tap detail to expand ↓</div>':''}
           <div class="task-due" style="color:${phase.color}">Target: ${fmtLong(effDue)}</div>
           <div onclick="event.stopPropagation()">
+            ${isExp && effUrl ? `<div style="padding:6px 0 2px;">
+              <a href="${escHtml(effUrl)}" target="_blank" rel="noopener"
+                 style="font-family:system-ui,sans-serif;font-size:12px;font-weight:600;
+                        color:${phase.color};text-decoration:none;display:inline-block;
+                        padding:5px 12px;background:var(--bg);border-radius:6px;
+                        border:1px solid var(--rule);">
+                Open link ↗
+              </a>
+            </div>` : ''}
             ${noteHtml(task.id, phase.color, isExp)}
             ${taskEditHtml(task)}
           </div>
