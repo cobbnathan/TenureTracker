@@ -862,9 +862,128 @@ body {
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* ── Auth gate ───────────────────────────────────────────────── */
+body.auth-locked { overflow: hidden; }
+
+.auth-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: var(--bg);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 320px;
+  background: #FAFAF8;
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  padding: 28px 24px;
+}
+
+.auth-title {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+  margin-bottom: 4px;
+}
+.auth-sub {
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.auth-field { margin-bottom: 14px; }
+.auth-label {
+  font-family: system-ui, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 5px;
+  display: block;
+}
+.auth-input {
+  width: 100%;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--white);
+  border: 1.5px solid var(--rule);
+  border-radius: 8px;
+  padding: 10px 12px;
+  outline: none;
+  transition: border-color .15s;
+  -webkit-appearance: none;
+}
+.auth-input:focus { border-color: var(--a1); }
+
+.auth-error {
+  font-family: system-ui, sans-serif;
+  font-size: 11.5px;
+  color: #B83030;
+  min-height: 14px;
+  margin-bottom: 6px;
+}
+
+.auth-submit {
+  width: 100%;
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: white;
+  background: var(--a1);
+  border: none;
+  border-radius: 8px;
+  padding: 11px;
+  cursor: pointer;
+  margin-top: 4px;
+  -webkit-tap-highlight-color: transparent;
+}
+.auth-submit:active { opacity: .85; }
 </style>
 </head>
 <body>
+
+<!-- Auth gate — blocks initial view until credentials entered -->
+<div class="auth-gate" id="auth-gate">
+  <form class="auth-card" id="auth-form">
+    <div class="auth-title">Tenure Tracker</div>
+    <div class="auth-sub">Sign in to continue</div>
+    <div class="auth-field">
+      <label class="auth-label" for="auth-email">Email</label>
+      <input class="auth-input" type="email" id="auth-email" autocomplete="username" autofocus required>
+    </div>
+    <div class="auth-field">
+      <label class="auth-label" for="auth-password">Password</label>
+      <input class="auth-input" type="password" id="auth-password" autocomplete="current-password" required>
+    </div>
+    <div class="auth-error" id="auth-error"></div>
+    <button class="auth-submit" type="submit">Unlock</button>
+  </form>
+</div>
+<script>
+(function(){
+  try {
+    if (localStorage.getItem('tenure-auth-ok') !== '1') {
+      document.getElementById('auth-gate').style.display = 'flex';
+      document.body.classList.add('auth-locked');
+    }
+  } catch(e) {
+    document.getElementById('auth-gate').style.display = 'flex';
+    document.body.classList.add('auth-locked');
+  }
+})();
+</script>
 
 <!-- Header + tabs -->
 <div class="header">
@@ -2275,7 +2394,7 @@ function render() {
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
-(async () => {
+async function boot() {
   // Show a brief loading indicator while fetching from GitHub
   document.getElementById('overall-label').textContent = '…';
   await loadState();
@@ -2283,7 +2402,42 @@ function render() {
     switchTab(state.activeTab);
   }
   render();
-})();
+}
+
+// ─── Auth gate ────────────────────────────────────────────────────────────────
+// Lightweight speed bump, not real security — this is a public static page,
+// so the hash below (and any bypass) is visible to anyone who opens devtools.
+const AUTH_HASH = '0fedfc4441871cea8c948cc3d4e0e7901d0d95272c757588eea0ca7003eb5f4d';
+const AUTH_KEY  = 'tenure-auth-ok';
+
+async function sha256Hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function isAuthed() {
+  try { return localStorage.getItem(AUTH_KEY) === '1'; } catch(e) { return false; }
+}
+
+document.getElementById('auth-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('auth-email').value.trim().toLowerCase();
+  const pass  = document.getElementById('auth-password').value;
+  const hash  = await sha256Hex(email + ':' + pass);
+  const err   = document.getElementById('auth-error');
+  if (hash === AUTH_HASH) {
+    try { localStorage.setItem(AUTH_KEY, '1'); } catch(e) {}
+    err.textContent = '';
+    document.getElementById('auth-gate').style.display = 'none';
+    document.body.classList.remove('auth-locked');
+    boot();
+  } else {
+    err.textContent = 'Incorrect email or password.';
+    document.getElementById('auth-password').value = '';
+  }
+});
+
+if (isAuthed()) boot();
 </script>
 </body>
 </html>
