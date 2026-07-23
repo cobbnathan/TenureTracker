@@ -1349,6 +1349,14 @@ const ANNUAL_GRANTS = [
    bestPhase:'Every year',
    detail:'Internal Emory awards for research and travel. Apply every year. Deadlines vary — confirm with the Office of Foundation Relations each fall. Includes URC (research), Perse, and Hightower awards.',
    url:null},
+  {id:'g-emory-swap',name:'Emory SWAP Fund (Scholarly Writing and Publishing)',color:'#6A9A50',
+   award:'Up to $3,000 · once every 3 years',
+   deadline:'October 1 (annual)',
+   nextDue:()=>nextAnnual(9,1),
+   bestPhase:'Book drafting & revision',
+   warning:'Recipients are eligible only once every three years. Time applications to your most writing-intensive years.',
+   detail:'Emory CFDE internal fund supporting scholarly writing and publishing projects — up to $3,000. Well-suited to book drafting, revision, or subvention-adjacent costs. Award limit is once per three-year window, so time it to your most writing-heavy stretch.',
+   url:'https://cfde.emory.edu/funding/research-scholarship/scholarly-writing-fund.html'},
   {id:'g-finn-mobility',name:'Finnish Cultural Foundation — Mobility Grant',color:'#3D7E96',
    award:'€2,000–€10,000 · 1-week minimum',
    deadline:'Oct 15–30 (single round from Oct 2026)',
@@ -2307,6 +2315,13 @@ function renderGrants() {
   const eraIdx = currentGrantEraIndex();
   const container = document.getElementById('grants-eras');
 
+  // Sort grants by next-due date within a phase; skipped grants sink to the bottom.
+  const byNextDue = (a, b) => {
+    const aSkip = isSkipped(a), bSkip = isSkipped(b);
+    if (aSkip !== bSkip) return aSkip ? 1 : -1;
+    return grantNextDue(a) - grantNextDue(b);
+  };
+
   // Annual section — always shown, never collapsible
   const annualHtml = `
     <div class="grants-era" id="era-annual">
@@ -2314,7 +2329,7 @@ function renderGrants() {
         <span>Annual — Apply Every Year</span>
       </div>
       <div class="grants-era-cards">
-        ${ANNUAL_GRANTS.map(grantCardHtml).join('')}
+        ${[...ANNUAL_GRANTS].sort(byNextDue).map(grantCardHtml).join('')}
       </div>
     </div>`;
 
@@ -2323,7 +2338,7 @@ function renderGrants() {
     const isCurrent   = i === eraIdx;
     const isCollapsed = !!state.eraCollapsed[era.id];
     const labelHtml   = `${era.label}${isCurrent?' <span class="era-current-badge">Current</span>':''}`;
-    const cards       = era.grants.map(grantCardHtml).join('');
+    const cards       = [...era.grants].sort(byNextDue).map(grantCardHtml).join('');
     return `<div class="grants-era${isCollapsed?' collapsed':''}" id="era-${era.id}">
       <div class="grants-era-header" onclick="toggleEra('${era.id}')">
         <span>${labelHtml}</span>
@@ -2407,7 +2422,7 @@ async function boot() {
 // ─── Auth gate ────────────────────────────────────────────────────────────────
 // Lightweight speed bump, not real security — this is a public static page,
 // so the hash below (and any bypass) is visible to anyone who opens devtools.
-const AUTH_HASH = '0fedfc4441871cea8c948cc3d4e0e7901d0d95272c757588eea0ca7003eb5f4d';
+const AUTH_HASH = '3d3cddb3fa6d8afae310069b2f637a08cd86303a56310d2533398c131e8a31fc';
 const AUTH_KEY  = 'tenure-auth-ok';
 
 async function sha256Hex(str) {
